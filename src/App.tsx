@@ -9,8 +9,12 @@ import { toLocalDateKey } from './utils/ical';
 import type { CalendarConfig } from './types';
 import './App.css';
 
-const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-const WEEKDAY_COUNT = 5;
+const DAY_COUNT = 5;
+
+function dayNameForDateKey(key: string): string {
+  const d = new Date(key + 'T12:00:00');
+  return d.toLocaleDateString(undefined, { weekday: 'short' });
+}
 
 function formatTime(d: Date): string {
   return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -30,12 +34,20 @@ export default function App() {
   const [appTitle, setAppTitle] = useState(DEFAULT_TITLE);
 
   useEffect(() => {
+    let reloadTimeoutId: ReturnType<typeof setTimeout> | null = null;
     fetch('/api/app')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.title) setAppTitle(data.title);
+        const mins = data?.refreshPageMinutes;
+        if (typeof mins === 'number' && mins > 0) {
+          reloadTimeoutId = setTimeout(() => window.location.reload(), mins * 60 * 1000);
+        }
       })
       .catch(() => {});
+    return () => {
+      if (reloadTimeoutId != null) clearTimeout(reloadTimeoutId);
+    };
   }, []);
 
   const {
@@ -90,7 +102,7 @@ export default function App() {
     const ws = new Date(weekStart);
     ws.setHours(0, 0, 0, 0);
     const we = new Date(ws);
-    we.setDate(we.getDate() + WEEKDAY_COUNT - 1);
+    we.setDate(we.getDate() + DAY_COUNT - 1);
     we.setHours(23, 59, 59, 999);
     return now >= ws && now <= we;
   })();
@@ -163,14 +175,14 @@ export default function App() {
         <DailyAgenda dateKey={selectedDay} events={agendaEvents} />
         <div className="week-grid">
           <div className="week-header">
-            {weekDateKeys.map((dateKey, i) => (
+            {weekDateKeys.map((dateKey) => (
               <button
                 key={dateKey}
                 type="button"
                 className={`day-header ${dateKey === selectedDay ? 'day-header-selected' : ''}`}
                 onClick={() => setSelectedDay(dateKey)}
               >
-                <span className="day-name">{DAY_NAMES[i]}</span>
+                <span className="day-name">{dayNameForDateKey(dateKey)}</span>
                 <span className="day-date">{formatDateKey(dateKey)}</span>
               </button>
             ))}

@@ -52,13 +52,11 @@ async function saveConfigToServer(config: CalendarConfig[]): Promise<boolean> {
   }
 }
 
+/** Start of the 5-day window: today (next 5 days = today + 4 more, including weekends). */
 function getWeekStart(d: Date): Date {
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d);
-  monday.setDate(diff);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
+  const start = new Date(d);
+  start.setHours(0, 0, 0, 0);
+  return start;
 }
 
 async function fetchOneCalendar(
@@ -183,7 +181,7 @@ export function useCalendars() {
   const goToPrevWeek = useCallback(() => {
     setWeekStart((d) => {
       const n = new Date(d);
-      n.setDate(n.getDate() - 7);
+      n.setDate(n.getDate() - 5);
       return n;
     });
   }, []);
@@ -191,7 +189,7 @@ export function useCalendars() {
   const goToNextWeek = useCallback(() => {
     setWeekStart((d) => {
       const n = new Date(d);
-      n.setDate(n.getDate() + 7);
+      n.setDate(n.getDate() + 5);
       return n;
     });
   }, []);

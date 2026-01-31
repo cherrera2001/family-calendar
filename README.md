@@ -64,6 +64,7 @@ A web app for iPad (or any browser) that shows the **week ahead** from multiple 
 
 - `PORT` – Server port (default `3001`).
 - `CALENDAR_TITLE` – Header title shown in the app (default `Herrera House`).
+- `REFRESH_PAGE_MINUTES` – Full page reload interval in minutes (e.g. `60` for hourly). Set to refresh the hallway display periodically; omit or `0` to disable.
 
 **iCal URLs**
 

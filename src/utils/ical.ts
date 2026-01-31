@@ -19,11 +19,11 @@ export function toLocalDateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-const WEEKDAY_COUNT = 5; // Mon–Fri
+const DAY_COUNT = 5; // next 5 days (today + 4, includes weekends)
 
 function endOfWeekdays(start: Date): Date {
   const out = new Date(start);
-  out.setDate(out.getDate() + WEEKDAY_COUNT);
+  out.setDate(out.getDate() + DAY_COUNT);
   out.setHours(23, 59, 59, 999);
   return out;
 }
@@ -225,12 +225,12 @@ export function groupEventsByDay(
   return map;
 }
 
-/** Build the 5 weekday date keys (Mon–Fri) from week start for a single source of truth. */
+/** Build the 5 date keys (next 5 days from week start) for a single source of truth. */
 export function getWeekDateKeys(weekStart: Date): string[] {
   const keys: string[] = [];
   const start = new Date(weekStart);
   start.setHours(0, 0, 0, 0);
-  for (let i = 0; i < WEEKDAY_COUNT; i++) {
+  for (let i = 0; i < DAY_COUNT; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
     keys.push(toLocalDateKey(d));

@@ -42,8 +42,12 @@ function writeConfig(config) {
 
 // App-level settings from environment (e.g. Portainer env vars)
 app.get('/api/app', (_req, res) => {
+  const refreshPageMinutes = process.env.REFRESH_PAGE_MINUTES
+    ? parseInt(process.env.REFRESH_PAGE_MINUTES, 10)
+    : 0;
   res.json({
     title: process.env.CALENDAR_TITLE || 'Herrera House',
+    refreshPageMinutes: refreshPageMinutes > 0 ? refreshPageMinutes : 0,
   });
 });
 
