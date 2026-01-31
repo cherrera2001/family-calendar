@@ -66,6 +66,18 @@ A web app for iPad (or any browser) that shows the **week ahead** from multiple 
 - `CALENDAR_TITLE` – Header title shown in the app (default `Herrera House`).
 - `REFRESH_PAGE_MINUTES` – Full page reload interval in minutes (e.g. `60` for hourly). Set to refresh the hallway display periodically; omit or `0` to disable.
 
+**Setting env vars in Portainer when deploying from GitHub**
+
+1. In Portainer go to **Stacks** → your stack (or **Add stack**).
+2. If you deploy from a **Git repository** (e.g. “Repository URL” with this repo):
+   - After the compose file loads from GitHub, scroll down to **Environment variables** (or **Env**).
+   - Click **Add an environment variable** and add each one:
+     - Name: `CALENDAR_TITLE` → Value: `Herrera House` (or your title)
+     - Name: `REFRESH_PAGE_MINUTES` → Value: `60` (or leave empty to disable)
+   - Deploy/update the stack. Portainer passes these into the container and they override any defaults.
+3. If you **edit the stack** later: open the stack → **Editor** → same **Environment variables** section at the bottom. Add or change variables there and **Update the stack**.
+4. **Alternative:** Put variables in `docker-compose.yml` in the repo under `environment:` (see the commented examples there). Values in Portainer’s env section still override the file if both are set.
+
 **iCal URLs**
 
 - **Google Calendar**: Calendar settings → Integrate calendar → Secret address in iCal format.

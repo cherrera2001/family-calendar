@@ -8,6 +8,9 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
+      # Optional: set in Portainer or uncomment and edit
+      # - CALENDAR_TITLE=House Calendar
+      # - REFRESH_PAGE_MINUTES=60
     volumes:
       - calendar-data:/app/data
 
