@@ -66,6 +66,20 @@
   color: var(--text-muted);
 }
 
+.settings-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  margin-bottom: 0.25rem;
+}
+
+.settings-checkbox input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--accent);
+}
+
 .calendar-block {
   margin-bottom: 1rem;
 }

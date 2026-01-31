@@ -27,9 +27,11 @@ interface SettingsProps {
   onClose: () => void;
   location: { lat: number; lon: number; city?: string };
   onLocationChange: (lat: number, lon: number, city?: string) => void;
+  keepScreenOn: boolean;
+  onKeepScreenOnChange: (value: boolean) => void;
 }
 
-export function Settings({ config, onSave, onClose, location, onLocationChange }: SettingsProps) {
+export function Settings({ config, onSave, onClose, location, onLocationChange, keepScreenOn, onKeepScreenOnChange }: SettingsProps) {
   const [calendars, setCalendars] = useState<CalendarConfig[]>([]);
   const [lat, setLat] = useState(String(location.lat));
   const [lon, setLon] = useState(String(location.lon));
@@ -274,6 +276,21 @@ export function Settings({ config, onSave, onClose, location, onLocationChange }
               />
             </label>
           </div>
+        </section>
+
+        <section className="settings-section">
+          <h3>Display</h3>
+          <label className="settings-checkbox">
+            <input
+              type="checkbox"
+              checked={keepScreenOn}
+              onChange={(e) => onKeepScreenOnChange(e.target.checked)}
+            />
+            <span>Keep screen on (for hallway display)</span>
+          </label>
+          <p className="settings-hint">
+            Prevents the iPad or device screen from dimming or locking while this page is open. Only applies when the tab is visible.
+          </p>
         </section>
 
         <div className="settings-footer">

@@ -27,11 +27,54 @@ function formatDateKey(key: string): string {
 }
 
 const DEFAULT_TITLE = 'Herrera House';
+const KEEP_SCREEN_ON_KEY = 'hallway-calendar-keep-screen-on';
+
+function getStoredKeepScreenOn(): boolean {
+  try {
+    return localStorage.getItem(KEEP_SCREEN_ON_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
 
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [location, setLocation] = useState(getStoredLocation);
   const [appTitle, setAppTitle] = useState(DEFAULT_TITLE);
+  const [keepScreenOn, setKeepScreenOn] = useState(getStoredKeepScreenOn);
+
+  const handleKeepScreenOnChange = (value: boolean) => {
+    setKeepScreenOn(value);
+    try {
+      localStorage.setItem(KEEP_SCREEN_ON_KEY, value ? 'true' : 'false');
+    } catch {}
+  };
+
+  // Screen Wake Lock: keep iPad/device screen on when option is enabled (e.g. hallway display)
+  useEffect(() => {
+    if (!keepScreenOn) return;
+    const nav = navigator as WakeLockNavigator;
+    if (!nav.wakeLock) return;
+    let sentinel: WakeLockSentinel | null = null;
+
+    const requestLock = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        sentinel = await nav.wakeLock!.request('screen');
+      } catch (_) {}
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') requestLock();
+    };
+
+    requestLock();
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      sentinel?.release().catch(() => {});
+    };
+  }, [keepScreenOn]);
 
   useEffect(() => {
     let reloadTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -222,6 +265,8 @@ export default function App() {
           onClose={() => setSettingsOpen(false)}
           location={location}
           onLocationChange={handleLocationChange}
+          keepScreenOn={keepScreenOn}
+          onKeepScreenOnChange={handleKeepScreenOnChange}
         />
       )}
       </div>
