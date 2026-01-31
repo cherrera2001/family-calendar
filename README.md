@@ -60,6 +60,11 @@ A web app for iPad (or any browser) that shows the **week ahead** from multiple 
 3. Set the port if needed: `PORT=3000 npm start`.
 4. On the iPad, open `http://<server-ip>:3000` and add to Home Screen.
 
+**Environment variables** (e.g. in Portainer or Docker)
+
+- `PORT` – Server port (default `3001`).
+- `CALENDAR_TITLE` – Header title shown in the app (default `Herrera House`).
+
 **iCal URLs**
 
 - **Google Calendar**: Calendar settings → Integrate calendar → Secret address in iCal format.

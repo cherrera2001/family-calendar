@@ -22,9 +22,22 @@ function formatDateKey(key: string): string {
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
 
+const DEFAULT_TITLE = 'Herrera House';
+
 export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [location, setLocation] = useState(getStoredLocation);
+  const [appTitle, setAppTitle] = useState(DEFAULT_TITLE);
+
+  useEffect(() => {
+    fetch('/api/app')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.title) setAppTitle(data.title);
+      })
+      .catch(() => {});
+  }, []);
+
   const {
     config,
     updateConfig,
@@ -111,7 +124,7 @@ export default function App() {
             This week
           </button>
         </div>
-        <h1 className="title">Herrera House</h1>
+        <h1 className="title">{appTitle}</h1>
         <div className="header-right">
           {error && <span className="header-error">{error}</span>}
           <button

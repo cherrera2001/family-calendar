@@ -66,8 +66,18 @@ async function fetchOneCalendar(
 ): Promise<CalendarEvent[]> {
   const url = `/api/ical?url=${encodeURIComponent(cal.url)}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const body = JSON.parse(text);
+      if (body.detail) detail = body.detail;
+      else if (body.error) detail = body.error;
+    } catch (_) {
+      if (text.length < 200) detail = text || detail;
+    }
+    throw new Error(detail);
+  }
   return parseICS(text, cal.id, cal.name, cal.color);
 }
 
@@ -115,8 +125,9 @@ export function useCalendars() {
         const parsed = await fetchOneCalendar(cal);
         updates[cal.id] = parsed;
       } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
         console.error('Failed to fetch calendar', cal.name, e);
-        setError((prev) => (prev ? `${prev}; ${cal.name} failed` : `Failed: ${cal.name}`));
+        setError((prev) => (prev ? `${prev}; ${cal.name}: ${msg}` : `${cal.name}: ${msg}`));
       }
     }
     setEventsByCalendar((prev) => {
@@ -134,8 +145,9 @@ export function useCalendars() {
       const parsed = await fetchOneCalendar(cal);
       setEventsByCalendar((prev) => ({ ...prev, [cal.id]: parsed }));
     } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
       console.error('Failed to fetch calendar', cal.name, e);
-      setError((prev) => (prev ? `${prev}; ${cal.name} failed` : `Failed: ${cal.name}`));
+      setError((prev) => (prev ? `${prev}; ${cal.name}: ${msg}` : `${cal.name}: ${msg}`));
     }
   }, []);
 
