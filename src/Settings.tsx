@@ -168,8 +168,8 @@ export function Settings({ config, onSave, onClose, location, onLocationChange }
                   className="input name-input"
                 />
                 <input
-                  type="url"
-                  placeholder="https://… calendar.ics"
+                  type="text"
+                  placeholder="https://… or webcal://… calendar URL"
                   value={cal.url}
                   onChange={(e) => updateCalendar(cal.id, { url: e.target.value })}
                   className="input url-input"
