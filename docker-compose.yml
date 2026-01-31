@@ -1,0 +1,15 @@
+services:
+  hallway-calendar:
+    image: hallway-calendar:latest
+    build: .
+    container_name: herrera-house-calendar
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+    volumes:
+      - calendar-data:/app/data
+
+volumes:
+  calendar-data:

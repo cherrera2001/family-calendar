@@ -1,0 +1,27 @@
+:root {
+  --bg: #0f1419;
+  --surface: #1a2332;
+  --surface2: #243044;
+  --text: #e6edf3;
+  --text-muted: #8b9cb3;
+  --accent: #58a6ff;
+  --border: #30363d;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
