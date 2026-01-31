@@ -88,27 +88,53 @@ export function DailyAgenda({ dateKey, events }: DailyAgendaProps) {
 
   const timelineRef = useRef<HTMLDivElement>(null);
   const bounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevDateKeyRef = useRef(dateKey);
+  const hasScrolledToNowRef = useRef(false);
   const [showScrollbar, setShowScrollbar] = useState(false);
 
-  const scrollToNow = useCallback(() => {
+  const scrollToNow = useCallback((): boolean => {
     const el = timelineRef.current;
-    if (!el || nowTopPx == null) return;
+    if (!el || nowTopPx == null) return false;
     const { clientHeight, scrollHeight } = el;
+    if (clientHeight <= 0) return false; // not laid out yet
     const targetScrollTop = nowTopPx - clientHeight * NOW_VIEW_OFFSET_RATIO;
     const clamped = Math.max(0, Math.min(scrollHeight - clientHeight, targetScrollTop));
     el.scrollTo({ top: clamped, behavior: 'smooth' });
+    return true;
   }, [nowTopPx]);
 
-  // When switching to today: scroll to keep current time in view (once per switch)
+  // On load or when switching to today: scroll so current time is in view (retry until laid out)
   useEffect(() => {
-    if (!isToday(dateKey) || nowTopPx == null) return;
-    const justSwitchedToToday = prevDateKeyRef.current !== dateKey;
-    prevDateKeyRef.current = dateKey;
-    if (justSwitchedToToday) {
-      const id = requestAnimationFrame(() => scrollToNow());
-      return () => cancelAnimationFrame(id);
+    if (!isToday(dateKey)) {
+      hasScrolledToNowRef.current = false;
+      return;
     }
+    if (nowTopPx == null) return;
+    if (hasScrolledToNowRef.current) return;
+
+    const retryDelays = [0, 100, 300, 600]; // ms: retry until timeline has height (e.g. after layout)
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const tryScroll = (attempt = 0) => {
+      if (hasScrolledToNowRef.current) return;
+      if (scrollToNow()) {
+        hasScrolledToNowRef.current = true;
+        return;
+      }
+      if (attempt < retryDelays.length) {
+        const delay = retryDelays[attempt];
+        const id = setTimeout(() => tryScroll(attempt + 1), delay);
+        timeouts.push(id);
+      }
+    };
+
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => tryScroll(0));
+    });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      timeouts.forEach((id) => clearTimeout(id));
+    };
   }, [dateKey, nowTopPx, scrollToNow]);
 
   // Scroll handler: show scrollbar, schedule bounce-back
