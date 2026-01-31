@@ -4,7 +4,7 @@ import './DailyAgenda.css';
 
 const HOUR_START = 6;
 const HOUR_END = 24; // 6am–midnight (24 = end of 11:30pm slot)
-const ROW_HEIGHT_PX = 32;
+const ROW_HEIGHT_PX = 44;
 const SLOTS_PER_HOUR = 2;
 const BOUNCE_BACK_MS = 20_000;
 const NOW_VIEW_OFFSET_RATIO = 0.25; // keep now line at 25% from top when focusing
