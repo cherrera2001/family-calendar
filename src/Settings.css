@@ -95,6 +95,13 @@
 .calendar-row-refresh {
   margin-left: 2.75rem;
   margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.show-on-display-label {
+  cursor: pointer;
 }
 
 .refresh-label {
@@ -170,6 +177,37 @@
 }
 
 .add-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.feed-url-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.feed-url-input {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: text;
+}
+
+.copy-btn {
+  flex-shrink: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.copy-btn:hover {
   color: var(--accent);
   border-color: var(--accent);
 }

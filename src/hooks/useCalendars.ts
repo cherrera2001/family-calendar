@@ -1,17 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { CalendarConfig, CalendarEvent } from '../types';
-import { parseICS, filterEventsForWeek, groupEventsByDay, getWeekDateKeys } from '../utils/ical';
+import { filterEventsForWeek, groupEventsByDay, getWeekDateKeys } from '../utils/ical';
 
 const STORAGE_KEY = 'hallway-calendar-config';
-const DEFAULT_REFRESH_MINUTES = 5;
-const MIN_REFRESH = 1;
-const MAX_REFRESH = 60;
-
-export function getRefreshMinutes(cal: CalendarConfig): number {
-  const n = cal.refreshMinutes;
-  if (typeof n === 'number' && n >= MIN_REFRESH && n <= MAX_REFRESH) return n;
-  return DEFAULT_REFRESH_MINUTES;
-}
+const EVENTS_POLL_MS = 60 * 1000; // poll /api/events every minute
 
 export function loadConfig(): CalendarConfig[] {
   try {
@@ -52,37 +44,31 @@ async function saveConfigToServer(config: CalendarConfig[]): Promise<boolean> {
   }
 }
 
-/** Start of the 5-day window: today (next 5 days = today + 4 more, including weekends). */
+/** Start of the 5-day window: today at midnight. */
 function getWeekStart(d: Date): Date {
   const start = new Date(d);
   start.setHours(0, 0, 0, 0);
   return start;
 }
 
-async function fetchOneCalendar(
-  cal: CalendarConfig
-): Promise<CalendarEvent[]> {
-  const url = `/api/ical?url=${encodeURIComponent(cal.url)}`;
-  const res = await fetch(url);
-  const text = await res.text();
-  if (!res.ok) {
-    let detail = `HTTP ${res.status}`;
-    try {
-      const body = JSON.parse(text);
-      if (body.detail) detail = body.detail;
-      else if (body.error) detail = body.error;
-    } catch (_) {
-      if (text.length < 200) detail = text || detail;
-    }
-    throw new Error(detail);
-  }
-  return parseICS(text, cal.id, cal.name, cal.color);
+type RawEvent = Omit<CalendarEvent, 'start' | 'end'> & { start: string; end: string };
+
+async function fetchEvents(): Promise<{ events: CalendarEvent[]; errors: Record<string, string> }> {
+  const res = await fetch('/api/events');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  const events: CalendarEvent[] = (data.events as RawEvent[] || []).map((ev) => ({
+    ...ev,
+    start: new Date(ev.start),
+    end: new Date(ev.end),
+  }));
+  return { events, errors: data.errors || {} };
 }
 
 export function useCalendars() {
   const [config, setConfig] = useState<CalendarConfig[]>(loadConfig);
   const [configLoaded, setConfigLoaded] = useState(false);
-  const [eventsByCalendar, setEventsByCalendar] = useState<Record<string, CalendarEvent[]>>({});
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [weekStart, setWeekStart] = useState<Date>(() => getWeekStart(new Date()));
@@ -110,62 +96,31 @@ export function useCalendars() {
   }, []);
 
   const fetchAll = useCallback(async () => {
-    if (config.length === 0) {
-      setEventsByCalendar({});
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError(null);
-    const updates: Record<string, CalendarEvent[]> = {};
-    for (const cal of config) {
-      try {
-        const parsed = await fetchOneCalendar(cal);
-        updates[cal.id] = parsed;
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        console.error('Failed to fetch calendar', cal.name, e);
-        setError((prev) => (prev ? `${prev}; ${cal.name}: ${msg}` : `${cal.name}: ${msg}`));
-      }
-    }
-    setEventsByCalendar((prev) => {
-      const next: Record<string, CalendarEvent[]> = {};
-      for (const cal of config) {
-        next[cal.id] = updates[cal.id] ?? prev[cal.id] ?? [];
-      }
-      return next;
-    });
-    setLoading(false);
-  }, [config]);
-
-  const fetchCalendar = useCallback(async (cal: CalendarConfig) => {
     try {
-      const parsed = await fetchOneCalendar(cal);
-      setEventsByCalendar((prev) => ({ ...prev, [cal.id]: parsed }));
+      const { events: fetched, errors } = await fetchEvents();
+      setEvents(fetched);
+      const errorMessages = Object.entries(errors)
+        .map(([, msg]) => msg)
+        .join('; ');
+      if (errorMessages) setError(errorMessages);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      console.error('Failed to fetch calendar', cal.name, e);
-      setError((prev) => (prev ? `${prev}; ${cal.name}: ${msg}` : `${cal.name}: ${msg}`));
+      console.error('Failed to fetch events', e);
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
+  // Fetch events once config is loaded, then poll every minute
   useEffect(() => {
     if (!configLoaded) return;
     fetchAll();
+    const timer = setInterval(fetchAll, EVENTS_POLL_MS);
+    return () => clearInterval(timer);
   }, [configLoaded, fetchAll]);
-
-  useEffect(() => {
-    if (config.length === 0) return;
-    const timers: ReturnType<typeof setInterval>[] = [];
-    for (const cal of config) {
-      const ms = getRefreshMinutes(cal) * 60 * 1000;
-      const t = setInterval(() => fetchCalendar(cal), ms);
-      timers.push(t);
-    }
-    return () => timers.forEach(clearInterval);
-  }, [config, fetchCalendar]);
-
-  const events = Object.values(eventsByCalendar).flat();
 
   const updateConfig = useCallback((next: CalendarConfig[]) => {
     setConfig(next);
@@ -173,7 +128,9 @@ export function useCalendars() {
     saveConfigToServer(next);
   }, []);
 
-  const filteredEvents = filterEventsForWeek(events, weekStart);
+  const visibleCalendarIds = new Set(config.filter((c) => c.showOnDisplay !== false).map((c) => c.id));
+  const visibleEvents = events.filter((ev) => visibleCalendarIds.has(ev.calendarId));
+  const filteredEvents = filterEventsForWeek(visibleEvents, weekStart);
   const weekDateKeys = getWeekDateKeys(weekStart);
   const days = groupEventsByDay(filteredEvents, weekDateKeys);
   const weekStartStr = weekStart.toISOString().slice(0, 10);

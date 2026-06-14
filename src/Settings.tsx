@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { CalendarConfig } from './types';
 import { geocodeCity } from './hooks/useWeather';
 import './Settings.css';
@@ -19,6 +19,33 @@ const DEFAULT_REFRESH = 5;
 
 function generateId(): string {
   return Math.random().toString(36).slice(2, 11);
+}
+
+function FeedUrlRow() {
+  const feedUrl = `${window.location.origin}/api/ical/feed`;
+  const [copied, setCopied] = useState(false);
+
+  const copy = useCallback(() => {
+    navigator.clipboard.writeText(feedUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [feedUrl]);
+
+  return (
+    <div className="feed-url-row">
+      <input
+        type="text"
+        readOnly
+        value={feedUrl}
+        className="input feed-url-input"
+        onClick={(e) => (e.target as HTMLInputElement).select()}
+      />
+      <button type="button" className="copy-btn" onClick={copy}>
+        {copied ? 'Copied!' : 'Copy'}
+      </button>
+    </div>
+  );
 }
 
 interface SettingsProps {
@@ -205,6 +232,14 @@ export function Settings({ config, onSave, onClose, location, onLocationChange, 
                     ))}
                   </select>
                 </label>
+                <label className="refresh-label show-on-display-label">
+                  <input
+                    type="checkbox"
+                    checked={cal.showOnDisplay !== false}
+                    onChange={(e) => updateCalendar(cal.id, { showOnDisplay: e.target.checked })}
+                  />
+                  <span>Show on display</span>
+                </label>
               </div>
             </div>
           ))}
@@ -276,6 +311,14 @@ export function Settings({ config, onSave, onClose, location, onLocationChange, 
               />
             </label>
           </div>
+        </section>
+
+        <section className="settings-section">
+          <h3>Unified calendar feed</h3>
+          <p className="settings-hint">
+            Subscribe to this URL in any calendar app to see all calendars in one feed.
+          </p>
+          <FeedUrlRow />
         </section>
 
         <section className="settings-section">

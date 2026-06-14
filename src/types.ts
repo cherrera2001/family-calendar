@@ -5,6 +5,8 @@ export interface CalendarConfig {
   color: string;
   /** Refresh interval in minutes. Default 5 if not set. */
   refreshMinutes?: number;
+  /** Whether to show this calendar on the hallway display. Default true. */
+  showOnDisplay?: boolean;
 }
 
 export interface CalendarEvent {
