@@ -277,8 +277,10 @@ app.get('/api/events', (_req, res) => {
     for (const ev of cached.events) {
       events.push({
         ...ev,
-        start: ev.start.toISOString(),
-        end: ev.end.toISOString(),
+        // All-day dates are sent as YYYY-MM-DD so the browser can parse them
+        // in local time regardless of the server's timezone (e.g. UTC on a NAS).
+        start: ev.allDay ? ev.start.toISOString().slice(0, 10) : ev.start.toISOString(),
+        end: ev.allDay ? ev.end.toISOString().slice(0, 10) : ev.end.toISOString(),
       });
     }
     if (cached.error) errors[id] = cached.error;

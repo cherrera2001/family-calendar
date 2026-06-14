@@ -59,8 +59,11 @@ async function fetchEvents(): Promise<{ events: CalendarEvent[]; errors: Record<
   const data = await res.json();
   const events: CalendarEvent[] = (data.events as RawEvent[] || []).map((ev) => ({
     ...ev,
-    start: new Date(ev.start),
-    end: new Date(ev.end),
+    // All-day dates arrive as YYYY-MM-DD (no time component) to avoid UTC
+    // timezone shifts when the server runs in a different timezone (e.g. UTC on NAS).
+    // Parse them as local noon so getDate() is correct in any UTC offset.
+    start: ev.start.length === 10 ? new Date(ev.start + 'T12:00:00') : new Date(ev.start),
+    end: ev.end.length === 10 ? new Date(ev.end + 'T12:00:00') : new Date(ev.end),
   }));
   return { events, errors: data.errors || {} };
 }
