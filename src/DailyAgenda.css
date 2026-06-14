@@ -155,19 +155,6 @@
   z-index: 1;
 }
 
-.agenda-event-span {
-  position: absolute;
-  left: 0;
-  right: 0;
-  margin: 1px 0;
-  box-sizing: border-box;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-height: 36px;
-}
-
 .agenda-event {
   padding: 0.4rem 0.6rem;
   background: rgba(36, 48, 64, 0.72);
@@ -179,6 +166,19 @@
   gap: 0.1rem;
   position: relative;
   z-index: 1;
+}
+
+.agenda-event-span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 1px 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-height: 36px;
 }
 
 .agenda-event-time {
