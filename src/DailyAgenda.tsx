@@ -42,6 +42,20 @@ function formatSlotLabel(slot: number): string {
   return isHalf ? `${h}:30pm` : `${h}pm`;
 }
 
+/** For all-day events: return a date-range string if the event spans >1 day, else null. */
+function allDayRange(ev: CalendarEvent): string | null {
+  // iCal all-day end dates are exclusive (end = day after last day), subtract 1 day
+  const endDisplay = new Date(ev.end);
+  endDisplay.setDate(endDisplay.getDate() - 1);
+  const startMidnight = new Date(ev.start);
+  startMidnight.setHours(0, 0, 0, 0);
+  endDisplay.setHours(0, 0, 0, 0);
+  const spanDays = Math.round((endDisplay.getTime() - startMidnight.getTime()) / 86_400_000) + 1;
+  if (spanDays <= 1) return null;
+  const fmt = (d: Date) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return `${fmt(ev.start)} – ${fmt(endDisplay)}`;
+}
+
 function formatAgendaDate(dateKey: string): string {
   const d = new Date(dateKey + 'T12:00:00');
   const today = new Date();
@@ -170,25 +184,27 @@ export function DailyAgenda({ dateKey, events }: DailyAgendaProps) {
       <h2 className="agenda-title">{formatAgendaDate(dateKey)}</h2>
 
       {allDay.length > 0 && (
-        <div className="agenda-section agenda-allday">
-          <div className="agenda-hour-label">All day</div>
-          <div className="agenda-hour-events">
-            {allDay.map((ev) => (
+        <div className="agenda-allday">
+          <div className="agenda-allday-label">All day</div>
+          {allDay.map((ev) => {
+            const range = allDayRange(ev);
+            return (
               <div
                 key={ev.id}
-                className="agenda-event"
-                style={{ borderLeftColor: ev.color }}
+                className="agenda-allday-event"
+                style={{
+                  backgroundColor: ev.color + '33',
+                  borderLeftColor: ev.color,
+                }}
               >
                 <span className="agenda-event-title">{ev.title}</span>
+                {range && <span className="agenda-allday-range">{range}</span>}
                 {ev.location && (
                   <span className="agenda-event-location">{ev.location}</span>
                 )}
-                <span className="agenda-event-calendar" style={{ color: ev.color }}>
-                  {ev.calendarName}
-                </span>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
 

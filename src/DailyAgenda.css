@@ -20,15 +20,38 @@
   flex-shrink: 0;
 }
 
-.agenda-section {
+.agenda-allday {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.35rem;
   padding: 0 1rem 0.75rem;
+  border-bottom: 1px solid rgba(230, 237, 243, 0.2);
+  flex-shrink: 0;
 }
 
-.agenda-allday {
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(230, 237, 243, 0.2);
+.agenda-allday-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.1rem;
+}
+
+.agenda-allday-event {
+  padding: 0.4rem 0.65rem;
+  border-radius: 6px;
+  border-left: 3px solid;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.85rem;
+}
+
+.agenda-allday-range {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .agenda-timeline {

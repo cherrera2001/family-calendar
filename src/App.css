@@ -243,6 +243,12 @@
   gap: 0.2rem;
 }
 
+.event-card-allday {
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  background: transparent;
+}
+
 .event-time {
   font-size: 0.75rem;
   color: var(--text-muted);

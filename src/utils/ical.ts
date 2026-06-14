@@ -214,9 +214,20 @@ export function groupEventsByDay(
     map.set(key, []);
   }
   for (const ev of events) {
-    const dayKey = toLocalDateKey(ev.start);
-    if (map.has(dayKey)) {
-      map.get(dayKey)!.push(ev);
+    if (ev.allDay) {
+      // iCal all-day end dates are exclusive — walk each day the event covers
+      const cursor = new Date(ev.start);
+      cursor.setHours(0, 0, 0, 0);
+      const exclusiveEnd = new Date(ev.end);
+      exclusiveEnd.setHours(0, 0, 0, 0);
+      while (cursor < exclusiveEnd) {
+        const dayKey = toLocalDateKey(cursor);
+        if (map.has(dayKey)) map.get(dayKey)!.push(ev);
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    } else {
+      const dayKey = toLocalDateKey(ev.start);
+      if (map.has(dayKey)) map.get(dayKey)!.push(ev);
     }
   }
   for (const arr of map.values()) {

@@ -231,26 +231,44 @@ export default function App() {
             ))}
           </div>
           <div className="week-body">
-            {weekDateKeys.map((dateKey) => (
-              <div key={dateKey} className="day-column">
-                {(days.get(dateKey) || []).map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="event-card"
-                    style={{ borderLeftColor: ev.color }}
-                  >
-                    <span className="event-time">
-                      {ev.allDay ? 'All day' : `${formatTime(ev.start)}${ev.end ? ` – ${formatTime(ev.end)}` : ''}`}
-                    </span>
-                    <span className="event-title">{ev.title}</span>
-                    {ev.location && <span className="event-location">{ev.location}</span>}
-                    <span className="event-calendar" style={{ color: ev.color }}>
-                      {ev.calendarName}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ))}
+            {weekDateKeys.map((dateKey) => {
+              const dayEvs = days.get(dateKey) || [];
+              const allDayEvs = dayEvs.filter((e) => e.allDay);
+              const timedEvs = dayEvs.filter((e) => !e.allDay);
+              return (
+                <div key={dateKey} className="day-column">
+                  {allDayEvs.map((ev) => (
+                    <div
+                      key={ev.id}
+                      className="event-card event-card-allday"
+                      style={{
+                        borderLeftColor: ev.color,
+                        backgroundColor: ev.color + '28',
+                      }}
+                    >
+                      <span className="event-title">{ev.title}</span>
+                      {ev.location && <span className="event-location">{ev.location}</span>}
+                    </div>
+                  ))}
+                  {timedEvs.map((ev) => (
+                    <div
+                      key={ev.id}
+                      className="event-card"
+                      style={{ borderLeftColor: ev.color }}
+                    >
+                      <span className="event-time">
+                        {`${formatTime(ev.start)}${ev.end ? ` – ${formatTime(ev.end)}` : ''}`}
+                      </span>
+                      <span className="event-title">{ev.title}</span>
+                      {ev.location && <span className="event-location">{ev.location}</span>}
+                      <span className="event-calendar" style={{ color: ev.color }}>
+                        {ev.calendarName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </div>
       </main>
